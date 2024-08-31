@@ -109,7 +109,7 @@ bbigStep (And b1 b2,s )
    | bbigStep(b1,s) && bbigStep(b2, s) = bbigStep(b2,s)
    | otherwise = False
 bbigStep (Or b1 b2,s )
-   | bbigStep (b1,s ) == True = True
+   | bbigStep (b1,s ) == True   = True
    | otherwise = bbigStep(b2,s)
 bbigStep (Leq e1 e2,s) = ebigStep(e1, s) <= ebigStep(e2, s)
 bbigStep (Igual e1 e2,s) = ebigStep(e1, s) == ebigStep(e2, s)
@@ -121,6 +121,9 @@ cbigStep (Skip,s) = (Skip,s)
 --cbigStep (Atrib (Var x) e,s) 
 -- cbigStep (While b c,s)
 ----cbigStep (DoWhile c b,s)  -- Repete C enquanto  B seja verdadeiro
+cbigStep (DoWhile c b,s) 
+    |   bbigStep (b,s) = cbigStep (Seq c (While b c), s)
+    |   otherwise = (Skip,s)
 --cbigStep (Loop e c,s)  --- Repete E vezes o comando C
 --cbigStep (Swap (Var x) (Var y),s) --- recebe duas variáveis e troca o conteúdo delas
 --cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
