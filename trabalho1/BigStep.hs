@@ -231,3 +231,10 @@ lojaDescontos :: C
 lojaDescontos = Seq (DAtrib (Var "precoOriginal") (Var "precoDesconto") (Num 100) (Num 0)) -- Inicializa o preço original e o desconto
                     (Seq (Atrib (Var "precoDesconto") (Sub (Var "precoOriginal") (Num 20))) -- Aplica o desconto de 20 unidades
                     (Atrib (Var "precoFinal") (Var "precoDesconto"))) -- Armazena o preço final
+                    
+-- Programa que incrementa a variável "x" até que ela seja maior ou igual a 5
+testeDoWhile :: C
+testeDoWhile = DoWhile (Atrib (Var "x") (Soma (Var "x") (Num 1))) (Leq (Var "x") (Num 5))
+
+exSigmaDoWhile :: Memoria
+exSigmaDoWhile = [("x", 0)]
