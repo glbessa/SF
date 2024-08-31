@@ -76,9 +76,9 @@ procuraVar ((s,i):xs) v
 
 mudaVar :: Memoria -> String -> Int -> Memoria
 mudaVar [] v n = error ("Variavel " ++ v ++ " nao definida no estado")
-mudaVar ((s,i):xs) v n
-  | s == v     = ((s,n):xs)
-  | otherwise  = (s,i): mudaVar xs v n
+mudaVar ((s, i) : xs) v n
+  | s == v     = ((s, n) : xs)
+  | otherwise  = (s, i) : mudaVar xs v n
 
 
 -------------------------------------
@@ -107,20 +107,38 @@ bbigStep (Not b,s)
    | otherwise                  = True 
 
 --bbigStep (And b1 b2,s )  =
+   | bbigStep (b1, s) == True = bbigStep (b2, s)
+   | otherwise = False
 --bbigStep (Or b1 b2,s )  =
 --bbigStep (Leq e1 e2,s) =
 --bbigStep (Igual e1 e2,s) = -- recebe duas expressões aritméticas e devolve um valor booleano dizendo se são iguais
 
 cbigStep :: (C, Memoria) -> (C, Memoria)
-cbigStep (Skip,s) = (Skip,s)
--- cbigStep (If b c1 c2,s)  
---cbigStep (Seq c1 c2,s)  
---cbigStep (Atrib (Var x) e,s) 
--- cbigStep (While b c,s)
+cbigStep (Skip, s) = (Skip, s)
+cbigStep (If b c1 c2, s)
+   | b == True = cbigStep (c1, s)
+   | otherwise = cbigStep (c2, s)
+cbigStep (Seq c1 c2, s) =
+   let (c1', s') = cbigStep (c1, s)
+   in case c1' of
+      Skip -> cbigStep (c2, s')
+      _    -> (Seq c1' c2, s')
+cbigStep (Atrib (Var x) e, s) = mudaVar (s, v, e) 
+cbigStep (While b c,s)
+   | bbigStep(b, s) == True = cbigStep (Seq c (While b c), s)
+   | otherwise              = (Skip, s)
 ----cbigStep (DoWhile c b,s)  -- Repete C enquanto  B seja verdadeiro
---cbigStep (Loop e c,s)  --- Repete E vezes o comando C
---cbigStep (Swap (Var x) (Var y),s) --- recebe duas variáveis e troca o conteúdo delas
---cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
+cbigStep (Loop e c, s)
+   | bbigStep (Leq 0 e) == True = cbigStep (Seq c (Loop (e - 1) c), s)
+   | otherwise                  = (Skip, s)
+cbigStep (Swap (Var x) (Var y), s)
+   let (_, s')  = cbigStep (Atrib (Var x) (ebigStep ((Var y), s)), s)
+       (_, s'') = cbigStep (Atrib (Var y) (ebigStep ((Var x), s)), s')
+   in (Skip, s'')
+cbigStep (DAtrrib (Var x) (Var y) e1 e2, s) -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
+   let (_, s')  = cbigStep (Atrib (Var x) (ebigStep (e1, s)), s)
+       (_, s'') = cbigStep (Atrib (Var y) (ebigStep (e2, s)), s')
+   in (Skip, s'')
 
 --------------------------------------
 ---
