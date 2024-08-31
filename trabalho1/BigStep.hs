@@ -105,13 +105,14 @@ bbigStep (FALSE,s) = False
 bbigStep (Not b,s) 
    | bbigStep (b,s) == True     = False
    | otherwise                  = True 
-
---bbigStep (And b1 b2,s )  =
-   | bbigStep (b1, s) == True = bbigStep (b2, s)
+bbigStep (And b1 b2,s )
+   | bbigStep(b1,s) && bbigStep(b2, s) = bbigStep(b2,s)
    | otherwise = False
---bbigStep (Or b1 b2,s )  =
---bbigStep (Leq e1 e2,s) =
---bbigStep (Igual e1 e2,s) = -- recebe duas expressões aritméticas e devolve um valor booleano dizendo se são iguais
+bbigStep (Or b1 b2,s )
+   | bbigStep (b1,s ) == True   = True
+   | otherwise = bbigStep(b2,s)
+bbigStep (Leq e1 e2,s) = ebigStep(e1, s) <= ebigStep(e2, s)
+bbigStep (Igual e1 e2,s) = ebigStep(e1, s) == ebigStep(e2, s)
 
 cbigStep :: (C, Memoria) -> (C, Memoria)
 cbigStep (Skip, s) = (Skip, s)
@@ -127,7 +128,8 @@ cbigStep (Atrib (Var x) e, s) = mudaVar (s, v, e)
 cbigStep (While b c,s)
    | bbigStep(b, s) == True = cbigStep (Seq c (While b c), s)
    | otherwise              = (Skip, s)
-----cbigStep (DoWhile c b,s)  -- Repete C enquanto  B seja verdadeiro
+cbigStep (DoWhile c b,s) = cbigStep (Seq c (While b c), s)
+<<<<<<< HEAD
 cbigStep (Loop e c, s)
    | bbigStep (Leq 0 e) == True = cbigStep (Seq c (Loop (e - 1) c), s)
    | otherwise                  = (Skip, s)
@@ -139,6 +141,14 @@ cbigStep (DAtrrib (Var x) (Var y) e1 e2, s) -- Dupla atribuição: recebe duas v
    let (_, s')  = cbigStep (Atrib (Var x) (ebigStep (e1, s)), s)
        (_, s'') = cbigStep (Atrib (Var y) (ebigStep (e2, s)), s')
    in (Skip, s'')
+=======
+cbigStep (DoWhile c b,s) 
+    |   bbigStep (b,s) = cbigStep (Seq c (While b c), s)
+    |   otherwise = (Skip,s)
+--cbigStep (Loop e c,s)  --- Repete E vezes o comando C
+--cbigStep (Swap (Var x) (Var y),s) --- recebe duas variáveis e troca o conteúdo delas
+--cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
+>>>>>>> 2f9757b593e94d30779d9234bac639d791450d8c
 
 --------------------------------------
 ---
