@@ -28,7 +28,7 @@ data C = While B C
     | Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
     | Loop E C    --- Loop E C: Executa E vezes o comando C
     | Swap E E --- recebe duas variáveis e troca o conteúdo delas
-    | DAtrrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
+    | DAtrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
    deriving(Eq,Show)                
 
 
@@ -80,6 +80,8 @@ mudaVar ((s, i) : xs) v n
   | s == v     = ((s, n) : xs)
   | otherwise  = (s, i) : mudaVar xs v n
 
+colocaVar :: Memoria -> String -> Int -> Memoria
+colocaVar m k v = ((k, v) : m)
 
 -------------------------------------
 ---
@@ -130,13 +132,13 @@ cbigStep (While b c,s)
    | otherwise              = (Skip, s)
 cbigStep (DoWhile c b,s) = cbigStep (Seq c (While b c), s)
 cbigStep (Loop e c, s)
-   | bbigStep (Leq (Num 0) e, s) == True = cbigStep (Seq c (Loop (Num (ebigStep (Sub e (Num 1), s))) c), s)
+   | bbigStep (Leq (Num 1) e, s) == True = cbigStep (Seq c (Loop (Num (ebigStep (Sub e (Num 1), s))) c), s)
    | otherwise                  = (Skip, s)
 cbigStep (Swap (Var x) (Var y), s) = 
    let (_, s1)  = cbigStep (Atrib (Var x) (Var y), s)
        (_, s2) = cbigStep (Atrib (Var y) (Var x), s1)
    in (Skip, s2)
-cbigStep (DAtrrib (Var x) (Var y) e1 e2, s) = -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
+cbigStep (DAtrib (Var x) (Var y) e1 e2, s) = -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
    let (_, s1)  = cbigStep (Atrib (Var x) e1, s)
        (_, s2) = cbigStep (Atrib (Var y) e2, s1)
    in (Skip, s2)
@@ -196,3 +198,36 @@ fatorial = (Seq (Atrib (Var "y") (Num 1))
                 (While (Not (Igual (Var "x") (Num 1)))
                        (Seq (Atrib (Var "y") (Mult (Var "y") (Var "x")))
                             (Atrib (Var "x") (Sub (Var "x") (Num 1))))))
+
+-- Fibonaccizera
+
+memFibonacci :: Memoria
+memFibonacci = [("n", 5), ("a", 0), ("b", 1), ("temp", 0)]
+
+fibonacci :: C
+fibonacci = Seq (Seq 
+                (Atrib (Var "a") (Num 0))   -- Inicializa a variável "a" com 0 (Fibonacci(0))
+                (Atrib (Var "b") (Num 1)))       -- Inicializa a variável "b" com 1 (Fibonacci(1))
+                (Loop (Var "n")                  -- Loop para iterar de 1 até n
+                      (Seq (Atrib (Var "temp")    -- Armazena o valor atual de "a"
+                           (Var "a"))
+                           (Seq (Atrib (Var "a")    -- Atualiza "a" para "b"
+                                (Var "b"))
+                                (Seq (Atrib (Var "b") -- Atualiza "b" para "a + b"
+                                     (Soma (Var "temp") (Var "b")))
+                                     (Atrib (Var "n")    -- Decrementa "n"
+                                     (Sub (Var "n") (Num 1)))))))
+
+memTesteDAtrib :: Memoria
+memTesteDAtrib = [("x", 0), ("y", 0)]
+
+testeDAtrib :: C
+testeDAtrib = DAtrib (Var "x") (Var "y") (Num 5) (Num 10)
+
+memLojaDescontos :: Memoria
+memLojaDescontos = [("precoOriginal", 0), ("precoDesconto", 0), ("precoFinal", 0)]
+
+lojaDescontos :: C
+lojaDescontos = Seq (DAtrib (Var "precoOriginal") (Var "precoDesconto") (Num 100) (Num 0)) -- Inicializa o preço original e o desconto
+                    (Seq (Atrib (Var "precoDesconto") (Sub (Var "precoOriginal") (Num 20))) -- Aplica o desconto de 20 unidades
+                    (Atrib (Var "precoFinal") (Var "precoDesconto"))) -- Armazena o preço final
