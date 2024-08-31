@@ -96,7 +96,7 @@ ebigStep (Num n, s)      = n
 ebigStep (Soma e1 e2, s) = ebigStep (e1, s) + ebigStep (e2, s)
 ebigStep (Sub e1 e2, s)  = ebigStep (e1, s) - ebigStep (e2, s)
 ebigStep (Mult e1 e2, s) = ebigStep (e1, s) * ebigStep (e2, s)
-ebigStep (Div e1 e2, s)  = ebigStep (e1, s) /
+ebigStep (Div e1 e2, s)  = ebigStep (e1, s) `div` ebigStep (e2, s)
 
 
 bbigStep :: (B, Memoria) -> Bool
@@ -117,38 +117,29 @@ bbigStep (Igual e1 e2,s) = ebigStep(e1, s) == ebigStep(e2, s)
 cbigStep :: (C, Memoria) -> (C, Memoria)
 cbigStep (Skip, s) = (Skip, s)
 cbigStep (If b c1 c2, s)
-   | b == True = cbigStep (c1, s)
+   | bbigStep (b, s) == True = cbigStep (c1, s)
    | otherwise = cbigStep (c2, s)
 cbigStep (Seq c1 c2, s) =
-   let (c1', s') = cbigStep (c1, s)
-   in case c1' of
-      Skip -> cbigStep (c2, s')
-      _    -> (Seq c1' c2, s')
-cbigStep (Atrib (Var x) e, s) = mudaVar (s, v, e) 
+   let (c11, s1) = cbigStep (c1, s)
+   in case c11 of
+      Skip -> cbigStep (c2, s1)
+      _    -> (Seq c11 c2, s1)
+cbigStep (Atrib (Var x) e, s) = (Skip, mudaVar s x (ebigStep (e, s)))
 cbigStep (While b c,s)
-   | bbigStep(b, s) == True = cbigStep (Seq c (While b c), s)
+   | bbigStep (b, s) == True = cbigStep (Seq c (While b c), s)
    | otherwise              = (Skip, s)
 cbigStep (DoWhile c b,s) = cbigStep (Seq c (While b c), s)
-<<<<<<< HEAD
 cbigStep (Loop e c, s)
-   | bbigStep (Leq 0 e) == True = cbigStep (Seq c (Loop (e - 1) c), s)
+   | bbigStep (Leq (Num 0) e, s) == True = cbigStep (Seq c (Loop (Num (ebigStep (Sub e (Num 1), s))) c), s)
    | otherwise                  = (Skip, s)
-cbigStep (Swap (Var x) (Var y), s)
-   let (_, s')  = cbigStep (Atrib (Var x) (ebigStep ((Var y), s)), s)
-       (_, s'') = cbigStep (Atrib (Var y) (ebigStep ((Var x), s)), s')
-   in (Skip, s'')
-cbigStep (DAtrrib (Var x) (Var y) e1 e2, s) -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
-   let (_, s')  = cbigStep (Atrib (Var x) (ebigStep (e1, s)), s)
-       (_, s'') = cbigStep (Atrib (Var y) (ebigStep (e2, s)), s')
-   in (Skip, s'')
-=======
-cbigStep (DoWhile c b,s) 
-    |   bbigStep (b,s) = cbigStep (Seq c (While b c), s)
-    |   otherwise = (Skip,s)
---cbigStep (Loop e c,s)  --- Repete E vezes o comando C
---cbigStep (Swap (Var x) (Var y),s) --- recebe duas variáveis e troca o conteúdo delas
---cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
->>>>>>> 2f9757b593e94d30779d9234bac639d791450d8c
+cbigStep (Swap (Var x) (Var y), s) = 
+   let (_, s1)  = cbigStep (Atrib (Var x) (Var y), s)
+       (_, s2) = cbigStep (Atrib (Var y) (Var x), s1)
+   in (Skip, s2)
+cbigStep (DAtrrib (Var x) (Var y) e1 e2, s) = -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
+   let (_, s1)  = cbigStep (Atrib (Var x) e1, s)
+       (_, s2) = cbigStep (Atrib (Var y) e2, s1)
+   in (Skip, s2)
 
 --------------------------------------
 ---
