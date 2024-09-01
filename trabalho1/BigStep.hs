@@ -3,59 +3,37 @@ module BigStep where
 -- Definição das árvore sintática para representação dos programas:
 
 data E = Num Int
-      |Var String
+      |Var  String
       |Soma E E
-      |Sub E E
+      |Sub  E E
       |Mult E E
-      |Div E E
+      |Div  E E
    deriving(Eq,Show)
 
 data B = TRUE
       | FALSE
-      | Not B
-      | And B B
-      | Or  B B
-      | Leq E E    -- menor ou igual
-      | Igual E E  -- verifica se duas expressões aritméticas são iguais
+      | Not   B
+      | And   B B
+      | Or    B B
+      | Leq   E E    -- menor ou igual
+      | Igual E E    -- verifica se duas expressões aritméticas são iguais
    deriving(Eq,Show)
 
 data C = While B C
-    | If B C C
-    | Seq C C
-    | Atrib E E
+    | If      B C C
+    | Seq     C C
+    | Atrib   E E
     | Skip
-    | DoWhile C B      ---- Do C While B: executa C enquanto B avalie para verdadeiro
-    | Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
-    | Loop E C    --- Loop E C: Executa E vezes o comando C
-    | Swap E E --- recebe duas variáveis e troca o conteúdo delas
-    | DAtrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
+    | DoWhile C B    -- Do C While B: executa C enquanto B avalie para verdadeiro
+    | Unless  B C C   -- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
+    | Loop    E C       -- Loop E C: Executa E vezes o comando C
+    | Swap    E E       -- recebe duas variáveis e troca o conteúdo delas
+    | DAtrib  E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
    deriving(Eq,Show)                
-
-
------------------------------------------------------
------
------ As próximas funções, servem para manipular a memória (sigma)
------
-------------------------------------------------
-
-
---- A próxima linha de código diz que o tipo memória é equivalente a uma lista de tuplas, onde o
---- primeiro elemento da tupla é uma String (nome da variável) e o segundo um Inteiro
---- (conteúdo da variável):
-
 
 type Memoria = [(String,Int)]
 
-exSigma :: Memoria
-exSigma = [ ("x", 10), ("temp",0), ("y",0)]
-
-
---- A função procuraVar recebe uma memória, o nome de uma variável e retorna o conteúdo
---- dessa variável na memória. Exemplo:
----
---- *Main> procuraVar exSigma "x"
---- 10
-
+-- Definicao de funcoes auxiliares de manipulacao de memoria
 
 procuraVar :: Memoria -> String -> Int
 procuraVar [] s = error ("Variavel " ++ s ++ " nao definida no estado")
@@ -63,34 +41,13 @@ procuraVar ((s,i):xs) v
   | s == v     = i
   | otherwise  = procuraVar xs v
 
-
---- A função mudaVar, recebe uma memória, o nome de uma variável e um novo conteúdo para essa
---- variável e devolve uma nova memória modificada com a varíável contendo o novo conteúdo. A
---- chamada
----
---- *Main> mudaVar exSigma "temp" 20
---- [("x",10),("temp",20),("y",0)]
----
----
---- essa chamada é equivalente a operação exSigma[temp->20]
-
 mudaVar :: Memoria -> String -> Int -> Memoria
-mudaVar [] v n = error ("Variavel " ++ v ++ " nao definida no estado")
+mudaVar [] v n = [(v, n)] -- adiciona na memoria caso nao exista
 mudaVar ((s, i) : xs) v n
   | s == v     = ((s, n) : xs)
   | otherwise  = (s, i) : mudaVar xs v n
 
-colocaVar :: Memoria -> String -> Int -> Memoria
-colocaVar m k v = ((k, v) : m)
-
--------------------------------------
----
---- Completar os casos comentados das seguintes funções:
----
----------------------------------
-
-
-
+-- Definicao da semantica
 
 ebigStep :: (E, Memoria) -> Int
 ebigStep (Var x, s)      = procuraVar s x
@@ -99,7 +56,6 @@ ebigStep (Soma e1 e2, s) = ebigStep (e1, s) + ebigStep (e2, s)
 ebigStep (Sub e1 e2, s)  = ebigStep (e1, s) - ebigStep (e2, s)
 ebigStep (Mult e1 e2, s) = ebigStep (e1, s) * ebigStep (e2, s)
 ebigStep (Div e1 e2, s)  = ebigStep (e1, s) `div` ebigStep (e2, s)
-
 
 bbigStep :: (B, Memoria) -> Bool
 bbigStep (TRUE,s)  = True
@@ -135,10 +91,11 @@ cbigStep (Loop e c, s)
    | bbigStep (Leq (Num 1) e, s) == True = cbigStep (Seq c (Loop (Num (ebigStep (Sub e (Num 1), s))) c), s)
    | otherwise                  = (Skip, s)
 cbigStep (Swap (Var x) (Var y), s) = 
-   let (_, s1)  = cbigStep (Atrib (Var x) (Var y), s)
-       (_, s2) = cbigStep (Atrib (Var y) (Var x), s1)
-   in (Skip, s2)
-cbigStep (DAtrib (Var x) (Var y) e1 e2, s) = -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
+   let (_, s1)  = cbigStep (Atrib (Var "tmp") (Var x), s)
+       (_, s2) = cbigStep (Atrib (Var x) (Var y), s1)
+       (_, s3) = cbigStep (Atrib (Var y) (Var "tmp"), s2)
+   in (Skip, s3)
+cbigStep (DAtrib (Var x) (Var y) e1 e2, s) =
    let (_, s1)  = cbigStep (Atrib (Var x) e1, s)
        (_, s2) = cbigStep (Atrib (Var y) e2, s1)
    in (Skip, s2)
@@ -153,41 +110,20 @@ cbigStep (DAtrib (Var x) (Var y) e1 e2, s) = -- Dupla atribuição: recebe duas 
 --- * Do While
 -------------------------------------
 
-exSigma2 :: Memoria
-exSigma2 = [("x",3), ("y",0), ("z",0)]
+memGenerica :: Memoria
+memGenerica = [ ("x", 10), ("temp",0), ("y",0)]
 
-
----
---- O progExp1 é um programa que usa apenas a semântica das expressões aritméticas. Esse
---- programa já é possível rodar com a implementação inicial  fornecida:
+memGenerica2 :: Memoria
+memGenerica2 = [("x",3), ("y",0), ("z",0)]
 
 progExp1 :: E
 progExp1 = Soma (Num 3) (Soma (Var "x") (Var "y"))
-
----
---- para rodar:
--- *Main> ebigStep (progExp1, exSigma)
--- 13
--- *Main> ebigStep (progExp1, exSigma2)
--- 6
-
---- Para rodar os próximos programas é necessário primeiro implementar as regras da semântica
----
-
-
----
---- Exemplos de expressões booleanas:
-
 
 teste1 :: B
 teste1 = (Leq (Soma (Num 3) (Num 3))  (Mult (Num 2) (Num 3)))
 
 teste2 :: B
 teste2 = (Leq (Soma (Var "x") (Num 3))  (Mult (Num 2) (Num 3)))
-
-
----
--- Exemplos de Programas Imperativos:
 
 testec1 :: C
 testec1 = (Seq (Seq (Atrib (Var "z") (Var "x")) (Atrib (Var "x") (Var "y"))) 
@@ -198,8 +134,6 @@ fatorial = (Seq (Atrib (Var "y") (Num 1))
                 (While (Not (Igual (Var "x") (Num 1)))
                        (Seq (Atrib (Var "y") (Mult (Var "y") (Var "x")))
                             (Atrib (Var "x") (Sub (Var "x") (Num 1))))))
-
--- Fibonaccizera
 
 memFibonacci :: Memoria
 memFibonacci = [("n", 5), ("a", 0), ("b", 1), ("temp", 0)]
@@ -218,6 +152,12 @@ fibonacci = Seq (Seq
                                      (Atrib (Var "n")    -- Decrementa "n"
                                      (Sub (Var "n") (Num 1)))))))
 
+memTestSwap :: Memoria
+memTestSwap = [("x", 4), ("y", 2), ("tmp", 0)]
+
+testeSwap :: C
+testeSwap = Swap (Var "x") (Var "y")
+
 memTesteDAtrib :: Memoria
 memTesteDAtrib = [("x", 0), ("y", 0)]
 
@@ -231,10 +171,10 @@ lojaDescontos :: C
 lojaDescontos = Seq (DAtrib (Var "precoOriginal") (Var "precoDesconto") (Num 100) (Num 0)) -- Inicializa o preço original e o desconto
                     (Seq (Atrib (Var "precoDesconto") (Sub (Var "precoOriginal") (Num 20))) -- Aplica o desconto de 20 unidades
                     (Atrib (Var "precoFinal") (Var "precoDesconto"))) -- Armazena o preço final
-                    
+
 -- Programa que incrementa a variável "x" até que ela seja maior ou igual a 5
+memTesteDoWhile :: Memoria
+memTesteDoWhile = [("x", 0)]
+
 testeDoWhile :: C
 testeDoWhile = DoWhile (Atrib (Var "x") (Soma (Var "x") (Num 1))) (Leq (Var "x") (Num 5))
-
-exSigmaDoWhile :: Memoria
-exSigmaDoWhile = [("x", 0)]
