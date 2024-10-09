@@ -26,7 +26,7 @@ data C = While B C
     | Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
     | Loop E C    --- Loop E C: Executa E vezes o comando C
     | Swap E E --- recebe duas variáveis e troca o conteúdo delas
-    | DAtrrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
+    | DAtrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
    deriving(Eq,Show)   
 
 -----------------------------------------------------
@@ -164,18 +164,28 @@ smallStepC (While b c, s) = (If b (Seq c (While b c)) Skip,s)
 -- DoWhile C B      ---- Do C While B: executa C enquanto B avalie para verdadeiro
 smallStepC (DoWhile c b, s) = (Seq c (While b c), s)
 
--- Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
+-- Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2. VERIFICAR SE ESSE ESTA CORRETO, NAO TENHO CERTEZA
 smallStepC (Unless FALSE c1 c2, s) = (c1, s)
 smallStepC (Unless TRUE c1 c2, s)  = (c2, s)
 smallStepC (Unless b c1 c2, s)     = let (bl, sl) = smallStepB (b, s)
                                      in (Unless bl c1 c2, sl)
 
--- Loop E C    --- Loop E C: Executa E vezes o comando C
+-- Loop E C    --- Loop E C: Executa E vezes o comando C. VERIFICAR SE ESSE ESTA CORRETO, NAO TENHO CERTEZA
+smallStepC (Loop (Num 0) c, s) = (Skip, s)
+smallStepC (Loop (Num n) c, s) 
+  | n > 0   = (Seq c (Loop (Num (n-1)) c), s)
+smallStepC (Loop e c, s) = let (el, sl) = smallStepE (e, s) 
+                           in (Loop el c, sl)
 
 -- Swap E E --- recebe duas variáveis e troca o conteúdo delas
 
--- DAtrrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
 
+-- DAtrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4. VERIFICAR SE ESSE ESTA CORRETO, NAO TENHO CERTEZA
+smallStepC (DAtrib (Var x) (Var y) (Num n1) (Num n2), s) = (Seq (Atrib (Var x) (Num n1)) (Atrib (Var y) (Num n2)), s)
+smallStepC (DAtrib (Var x) (Var y) (Num n1) e2, s) = let (el, sl) = smallStepE(e2, s) 
+                                                      in (DAtrib (Var x) (Var y) (Num n1) el, sl)
+smallStepC (DAtrib (Var x) (Var y) e1 e2, s) = let(el, sl) = smallStepE(e1, s) 
+                                                in (DAtrib (Var x) (Var y) el e2, sl) 
 
 ----------------------
 --  INTERPRETADORES
@@ -225,7 +235,7 @@ isFinalC _       = False
 --  * Unless  
 --  * Loop   
 --  * Swap 
---  * DAtrrib 
+--  * DAtrib 
 
 exSigma2 :: Memoria
 exSigma2 = [("x",3), ("y",0), ("z",0)]
