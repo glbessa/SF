@@ -157,7 +157,9 @@ smallStepC (Seq c1 c2,s) = let (cl,sl) = smallStepC (c1,s)
 smallStepC (Atrib (Var x) (Num n),s) = (Skip, mudaVar s x n)
 smallStepC (Atrib (Var x) e,s) = let (el, sl) = smallStepE (e, s)
                                  in (Atrib (Var x) el, sl)
---smallStepC (While b c, s) 
+--smallStepC (While b c, s) = FEITO
+smallStepC (While b c, s) = (If b (Seq c (While b c)) Skip,s)
+ 
 --smallStepC (DoWhile c b,s) 
  -- DoWhile C B      ---- Do C While B: executa C enquanto B avalie para verdadeiro
   -- Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
