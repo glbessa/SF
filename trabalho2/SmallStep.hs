@@ -177,8 +177,8 @@ smallStepC (Loop (Num n) c, s)
 smallStepC (Loop e c, s) = let (el, sl) = smallStepE (e, s) 
                            in (Loop el c, sl)
 
--- Swap E E --- recebe duas variáveis e troca o conteúdo delas
-
+-- Swap E E --- recebe duas variáveis e troca o conteúdo delas. VERIFICAR SE ESSE ESTA CORRETO, NAO TENHO CERTEZA
+smallStepC (Swap (Var x) (Var y), s) = (DAtrib (Var x) (Var y) (procuraVar s y) (procuraVar s x), s)
 
 -- DAtrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4. VERIFICAR SE ESSE ESTA CORRETO, NAO TENHO CERTEZA
 smallStepC (DAtrib (Var x) (Var y) (Num n1) (Num n2), s) = (Seq (Atrib (Var x) (Num n1)) (Atrib (Var y) (Num n2)), s)
