@@ -115,7 +115,10 @@ smallStepB (And FALSE b2,s)  = (FALSE, s)
 smallStepB (And TRUE b2,s)  = (b2, s)
 smallStepB (And b1 b2,s)  = let (bl, sl) = smallStepB (b1, s) in (And bl b2, sl)
  
---smallStepB (Or b1 b2,s )  =
+--smallStepB (Or b1 b2,s )  = Feito
+smallStepB (Or FALSE b2,s)  = (b2, s)
+smallStepB (Or TRUE b2,s)  = (TRUE, s)
+smallStepB (Or b1 b2,s)  = let (bl, sl) = smallStepB (b1, s) in (Or bl b2, sl)
 
 --smallStepB (Leq e1 e2, s) =
 --smallStepB (Igual e1 e2, s) = -- recebe duas expressões aritméticas e devolve um valor booleano dizendo se são iguais
