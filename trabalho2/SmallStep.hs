@@ -160,12 +160,17 @@ smallStepC (Atrib (Var x) e,s) = let (el, sl) = smallStepE (e, s)
 --smallStepC (While b c, s) = FEITO
 smallStepC (While b c, s) = (If b (Seq c (While b c)) Skip,s)
  
---smallStepC (DoWhile c b,s) 
- -- DoWhile C B      ---- Do C While B: executa C enquanto B avalie para verdadeiro
-  -- Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
-  -- Loop E C    --- Loop E C: Executa E vezes o comando C
- -- Swap E E --- recebe duas variáveis e troca o conteúdo delas
- -- DAtrrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
+--smallStepC (DoWhile c b,s) = VERIFICAR SE ESSE ESTA CORRETO, NAO TENHO CERTEZA
+-- DoWhile C B      ---- Do C While B: executa C enquanto B avalie para verdadeiro
+smallStepC (DoWhile c b, s) = (Seq c (While b c), s)
+
+-- Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
+
+-- Loop E C    --- Loop E C: Executa E vezes o comando C
+
+-- Swap E E --- recebe duas variáveis e troca o conteúdo delas
+
+-- DAtrrib E E E E -- Dupla atribuição: recebe duas variáveis "e1" e "e2" e duas expressões "e3" e "e4". Faz e1:=e3 e e2:=e4.
 
 
 ----------------------
