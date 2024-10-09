@@ -105,14 +105,18 @@ smallStepE (Sub e1 e2,s)              = let (el,sl) = smallStepE (e1,s)
 
 
 smallStepB :: (B,Memoria) -> (B, Memoria)
--- smallStepB (Not b,s) 
+-- smallStepB (Not b,s) = Feito
 smallStepB (Not FALSE,s) = (TRUE, s)
 smallStepB (Not TRUE,s) = (FALSE, s)
 smallStepB (Not b,s) = let (bl, sl) = smallStepB (b,s) in (Not bl, sl)
 
-
---smallStepB (And b1 b2,s )  =
+--smallStepB (And b1 b2,s )  = Feito
+smallStepB (And FALSE b2,s)  = (FALSE, s)
+smallStepB (And TRUE b2,s)  = (b2, s)
+smallStepB (And b1 b2,s)  = let (bl, sl) = smallStepB (b1, s) in (And bl b2, sl)
+ 
 --smallStepB (Or b1 b2,s )  =
+
 --smallStepB (Leq e1 e2, s) =
 --smallStepB (Igual e1 e2, s) = -- recebe duas expressões aritméticas e devolve um valor booleano dizendo se são iguais
 
