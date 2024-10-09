@@ -148,7 +148,11 @@ smallStepC (If TRUE c1 c2,s) = (c1, s)
 smallStepC (If b c1 c2,s) = let (bl, sl) = smallStepB (b,s) 
                             in (If bl c1 c2, sl)
 
---smallStepC (Seq c1 c2,s)  
+--smallStepC (Seq c1 c2,s) = FEITO
+smallStepC (Seq Skip c2,s) = (c2, s)
+smallStepC (Seq c1 c2,s) = let (cl,sl) = smallStepC (c1,s)
+                           in (Seq cl c2,sl)
+
 --smallStepC (Atrib (Var x) e,s) 
 --smallStepC (While b c, s) 
 --smallStepC (DoWhile c b,s) 
