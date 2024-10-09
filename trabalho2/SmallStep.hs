@@ -104,8 +104,13 @@ smallStepE (Sub e1 e2,s)              = let (el,sl) = smallStepE (e1,s)
                                          in (Sub el e2,sl)
 
 
---smallStepB :: (B,Memoria) -> (B, Memoria)
+smallStepB :: (B,Memoria) -> (B, Memoria)
 -- smallStepB (Not b,s) 
+smallStepB (Not FALSE,s) = (TRUE, s)
+smallStepB (Not TRUE,s) = (FALSE, s)
+smallStepB (Not b,s) = let (bl, sl) = smallStepB (b,s) in (Not bl, sl)
+
+
 --smallStepB (And b1 b2,s )  =
 --smallStepB (Or b1 b2,s )  =
 --smallStepB (Leq e1 e2, s) =
