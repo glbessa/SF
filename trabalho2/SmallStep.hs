@@ -165,6 +165,10 @@ smallStepC (While b c, s) = (If b (Seq c (While b c)) Skip,s)
 smallStepC (DoWhile c b, s) = (Seq c (While b c), s)
 
 -- Unless B C C   ---- Unless B C1 C2: se B avalia para falso, então executa C1, caso contrário, executa C2
+smallStepC (Unless FALSE c1 c2, s) = (c1, s)
+smallStepC (Unless TRUE c1 c2, s)  = (c2, s)
+smallStepC (Unless b c1 c2, s)     = let (bl, sl) = smallStepB (b, s)
+                                     in (Unless bl c1 c2, sl)
 
 -- Loop E C    --- Loop E C: Executa E vezes o comando C
 
