@@ -96,7 +96,12 @@ smallStepE (Mult (Num n) e, s)         = let (el,sl) = smallStepE (e,s)
                                          in (Mult (Num n) el, sl)
 smallStepE (Mult e1 e2,s)              = let (el,sl) = smallStepE (e1,s)
                                          in (Mult el e2,sl)
--- smallStepE (Sub e1 e2,s)              =
+-- smallStepE (Sub e1 e2,s)              = Feito
+smallStepE (Sub (Num n1) (Num n2), s) = (Num (n1 - n2), s)
+smallStepE (Sub (Num n) e, s)         = let (el,sl) = smallStepE (e,s)
+                                         in (Sub (Num n) el, sl)
+smallStepE (Sub e1 e2,s)              = let (el,sl) = smallStepE (e1,s)
+                                         in (Sub el e2,sl)
 
 
 --smallStepB :: (B,Memoria) -> (B, Memoria)
