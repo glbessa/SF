@@ -132,7 +132,14 @@ smallStepB (Leq (Num n) e, s) = let (el,sl) = smallStepE (e,s)
 smallStepB (Leq e1 e2, s) = let (el,sl) = smallStepE (e1,s)
                             in (Leq el e2,sl)
 
---smallStepB (Igual e1 e2, s) = -- recebe duas expressões aritméticas e devolve um valor booleano dizendo se são iguais
+--smallStepB (Igual e1 e2, s) = -- recebe duas expressões aritméticas e devolve um valor booleano dizendo se são iguais. "FEITO"
+smallStepB (Igual (Num n1) (Num n2), s)
+   | n1 == n2 = (TRUE, s)
+   | otherwise (FALSE, s)
+smallStepB (Igual (Num n) e, s) = let (el,sl) = smallStepE (e,s)
+                                  in (Igual (Num n) el, sl)
+smallStepB (Igual e1 e2, s) = let (el,sl) = smallStepE (e1,s)
+                              in (Igual el e2,sl)
 
 -- smallStepC :: (C,Memoria) -> (C,Memoria)
 -- smallStepC (If b c1 c2,s)  
