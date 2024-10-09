@@ -141,8 +141,13 @@ smallStepB (Igual (Num n) e, s) = let (el,sl) = smallStepE (e,s)
 smallStepB (Igual e1 e2, s) = let (el,sl) = smallStepE (e1,s)
                               in (Igual el e2,sl)
 
--- smallStepC :: (C,Memoria) -> (C,Memoria)
--- smallStepC (If b c1 c2,s)  
+smallStepC :: (C,Memoria) -> (C,Memoria)
+-- smallStepC (If b c1 c2,s) =  FEITO
+smallStepC (If FALSE c1 c2,s) = (c2, s)
+smallStepC (If TRUE c1 c2,s) = (c1, s)
+smallStepC (If b c1 c2,s) = let (bl, sl) = smallStepB (b,s) 
+                            in (If bl c1 c2, sl)
+
 --smallStepC (Seq c1 c2,s)  
 --smallStepC (Atrib (Var x) e,s) 
 --smallStepC (While b c, s) 
